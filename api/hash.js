@@ -1,5 +1,3 @@
-
-
 const crypto = require('crypto'); // needed for the sha256 encryption/decryption
 
 
@@ -30,3 +28,7 @@ export const decrypt = (hash) => {
     
     return buffer.toString('utf-8'); // return hashed result as (UTF-8) string
 }
+
+
+const hash = { encrypt, decrypt };
+export default hash; // export both functions as a single object (if both are needed as an object in the future)
