@@ -1,6 +1,6 @@
 import { RepeatOneSharp } from "@mui/icons-material";
 import API from "./api";
-import { encrypt, decrypt } from "./aes";
+import { encrypt, decrypt } from "./hash";
 
 // New Endpoint
 
