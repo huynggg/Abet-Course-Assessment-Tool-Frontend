@@ -3,12 +3,12 @@
 const crypto = require('crypto'); // needed for the sha256 encryption/decryption
 
 
-export function encrypt (text) {
+export const encrypt = (text) => {
     const _SALT = process.env.HASH_SALT; // the key 
     const _ITERATIONS = process.env.HASH_ITERATIONS; // the number of times the hash will be performed
 
     const hash = crypto.createHash('sha256'); // using instance of SHA256 algorithm as sha256
-    let buffer = Buffer.from(value + _SALT, 'utf-8'); // convert the string to bytearray and add salt
+    let buffer = Buffer.from(text + _SALT, 'utf-8'); // convert the string to bytearray and add salt
     
     for (let i = 0; i < _ITERATIONS; i++) // for n iterations...
         buffer = hash.update(buffer).digest(); // hash once using sha256
@@ -17,7 +17,7 @@ export function encrypt (text) {
 }
 
 
-export function decrypt (hash) {
+export const decrypt = (hash) => {
     const _SALT = process.env.HASH_SALT; // the key 
     const _ITERATIONS = process.env.HASH_ITERATIONS; // the number of times the hash will be performed
 
