@@ -64,11 +64,13 @@ const instructorHome = () => {
     const ISSERVER = typeof window === "undefined";
     if (!ISSERVER) {
       const token = cookieCutter.get("token");
-      if (!jwt.decode(token)) {
+
+      const decoded = jwt.decode(token);
+      if (!decoded)
         router.push("/Login");
-      }
-      const jsonUserId = json.unique_name;
-      setUser(jsonUserId);
+      
+      const UserId = decoded.unique_name;
+      setUser(UserId);
     }
   };
 
