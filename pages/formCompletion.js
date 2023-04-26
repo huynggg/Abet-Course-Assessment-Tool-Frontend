@@ -210,18 +210,23 @@ const formCompletion = ({ number, section, term, year, department }) => {
     console.log("----------------------");
     console.log(outcomeForm);
     try {
-      //const res = await setGrades(year,term,department,number,section,form2)
       for (const key in gradeForm) {
-        let totalStudentsNum =
+        const totalStudentsNum =
           gradeForm[key].a +
           gradeForm[key].b +
           gradeForm[key].c +
           gradeForm[key].d +
-          gradeForm[key].f;
-        console.log(totalStudentsNum);
+          gradeForm[key].f; // calculate the total number of students by adding up the number of students in each grade category
         gradeForm[key].totalStudents = totalStudentsNum;
       }
-      const gradeRes = await setGrades(
+      // WIP: replace the code block above with this one
+      gradeForm.forEach((major) => { // iterate through each major the gradeForm
+        for (const key in major) // iterate through the each key in major
+          if (key != "totalStudents") // if this key is NOT "totalStudents"
+            major[key] = parseInt(major[key]); // convert the value of the key to an integer
+      });
+
+      const responseGrades = await setGrades(
         year,
         term,
         department,
@@ -229,8 +234,8 @@ const formCompletion = ({ number, section, term, year, department }) => {
         section,
         gradeForm
       );
-
-      const outcomeRes = await SetStudentOutcomesCompleted(
+      const statusGrades = responseGrades.status;
+      const responseOutcomes = await SetStudentOutcomesCompleted(
         year,
         term,
         department,
@@ -238,37 +243,41 @@ const formCompletion = ({ number, section, term, year, department }) => {
         section,
         outcomeForm
       );
-
-      const gradeStatus = gradeRes.status;
-      const outcomeStatus = outcomeRes.status;
-
-      if (gradeStatus == "Success" && outcomeStatus == "Success") {
+      const statusOutcomes = responseOutcomes.status;
+      if (statusGrades == "Success" && statusOutcomes == "Success") { // if both the grade and outcome forms were submitted successfully
         toast({
           description: `Form submitted!`,
           status: "success",
           duration: 3000,
           isClosable: true,
         });
-        return;
-      } else if (!gradeStatus == "Success") {
-        toast({
-          description: `There was an error submitting the form! Error:${gradeStatus}`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      } else if (!outcomeStatus == "Success") {
-        toast({
-          description: `There was an error submitting the form! Error:${outcomeStatus}`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
+        throw e;
       }
-    } catch (error) {
-      console.log(error);
+      else if (!statusGrades == "Success" || !statusOutcomes == "Success") { // if the grade or outcome form were not submitted successfully
+        const msg = "An error occured while submitting the form!";
+        const e = new Error(msg, `statusGrades: ${statusGrades}`, `statusOutcomes: ${statusOutcomes}`);
+        toast({
+          description: `${msg}\nError:${(statusGrades != "Success") ? ("statusGrades: " + statusGrades) : ("statusOutcomes: " + statusOutcomes)}`, // if the grade form was not submitted successfully, then the error is the gradeStatus; otherwise, the error is the outcomeStatus
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        throw e;
+      }
+      else {
+        const msg = "An error occured while submitting the form!";
+        const e = new Error(msg, "Unknown error");
+        toast({
+          description: `${msg}\nError: "Unknown error"`, // if the grade form was not submitted successfully, then the error is the gradeStatus; otherwise, the error is the outcomeStatus
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        throw e;
+      }
+    }
+    catch (error) {
+      console.error(error);
     }
 
     refreshTable();
@@ -288,6 +297,7 @@ const formCompletion = ({ number, section, term, year, department }) => {
                 ABET Course Assesment
               </Text>
             </Box>
+            
             <GradesInput
               csGrades={gradeForm.CS}
               ceGrades={gradeForm.CE}
@@ -300,6 +310,7 @@ const formCompletion = ({ number, section, term, year, department }) => {
               courseOutcomes={outcomeForm}
               handleOutcomesChange={handleOutcomesChange}
             />
+
             <Text fontSize="xl" fontWeight="bold" mb="1em">
               Instructor Comments
             </Text>
@@ -312,6 +323,7 @@ const formCompletion = ({ number, section, term, year, department }) => {
               onChange={handleCommentChange}
               value={comment}
             ></Textarea>
+
             <Box>
               <Button
                 mb="1em"
@@ -329,14 +341,15 @@ const formCompletion = ({ number, section, term, year, department }) => {
   );
 };
 
-formCompletion.getInitialProps = ({ query }) => {
-  console.log(query);
+formCompletion.getInitialProps = ({ query }) => { // get the query parameters from the URL
+  console.log(query); // log the query parameters to the console
+  const { department, number, section, term, year } = query; // destructure the query parameters
   return {
-    department: query.department,
-    number: query.number,
-    section: query.section,
-    term: query.term,
-    year: query.year,
+    department: department,
+    number: number,
+    section: section,
+    term: term,
+    year: year,
   };
 };
 
