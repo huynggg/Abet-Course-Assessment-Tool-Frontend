@@ -33,134 +33,176 @@ const formCompletion = ({ number, section, term, year, department }) => {
   const [gradeForm, setGradeForm] = useState();
   const [outcomeForm, setOutcomeForm] = useState();
   const [refreshKey, setRefreshKey] = useState(0); //For refreshing the table
+  const [comment, setComment] = useState("");
   const toast = useToast({ position: "top" });
+  
   const refreshTable = () => {
     setRefreshKey(refreshKey + 1);
   };
 
   const checkUser = async () => {
-    const ISSERVER = typeof window === "undefined";
-    const sectionInstructorEUID = await getSectionInformation();
-    if (!ISSERVER) {
-      const token = cookieCutter.get("token");
-      const json = jwt.decode(token);
-      if (!json) {
-        router.push("/Login");
-        return;
-      }
+    const ISSERVER = typeof window === "undefined"; // check if we are in the server environment; true if in server environment, false if in client environment
+                                                    // necessary because server does not have session cookies
+    if (!ISSERVER) { // if we are in the client environment
+      const token = cookieCutter.get("token"); // get the token from the session cookie
 
-      const jsonUserId = json.unique_name;
-      if (json == null) {
-        router.push("/");
-      } else {
-        console.log(jsonUserId, sectionInstructorEUID);
-        if (jsonUserId != sectionInstructorEUID) {
-          toast({
-            title: "Error",
-            description: `This section instructor is not the same as the login user!`,
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-          router.push("/");
-        }
+      const decoded = jwt.decode(token); // decode the token using the JWT library
+      if (!decoded) // if the token is invalid, expired, null, or undefined
+        router.push("/Login"); // redirect to login page
+      
+      const userId = decoded.unique_name; // get the user's EUID from the token
+      const sectionInstructorEUID = await getSectionInformation();
+      if (userId != sectionInstructorEUID) { // if the user is not the same as the section instructor for the selected section
+        toast({
+          title: "Error",
+          description: `This section instructor is not the same as the login user!`,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push("/"); // redirect to home page
       }
     }
   };
 
   const getSectionInformation = async () => {
     try {
-      const sectionRes = await getSection(
+      const response = await getSection(
         term,
         year,
         department,
         number,
         section
       );
-      const sectionData = sectionRes.data;
-      const status = sectionRes.status;
-      if (status != "Success") {
+
+      const { data } = response;
+      const { status } = response;
+      if (status != "Success") { // status is NOT "Success"
+        const msg = "An error occured while fetching the section information!";
+        const e = new Error(msg, response);
         toast({
           title: "Error",
-          description: `There was an error fetching the section information! Error: ${status}`,
+          description: `${msg}\nError: ${status}`,
           status: "error",
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
         });
-        return;
+        throw e;
       }
-      return sectionData.instructorEUID;
-    } catch (error) {
-      console.log(error);
+      else if (!data) { // if there is no data or undefined
+        const msg = "No data returned from API call!";
+        const e = new Error(msg, response);
+        toast({
+          title: "Error",
+          description: msg + " See the console for more details.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        throw e;
+      }
+      return data.instructorEUID; // return the instructorEUID of the section // why only EUID?
+    }
+    catch (error) {
+      console.error(error);
     }
   };
 
   const getGradeForm = async () => {
     try {
-      const res = await getGrades(year, term, department, number, section);
-      const gradesData = res.data;
-      if (gradesData) {
-        if (Object.keys(gradesData).length < 1) {
-          //If the is the first time working on the form then create a blank form
-          await setGrades(year, term, department, number, section, blankForm);
-          setGradeForm(blankForm);
-        } else if (Object.keys(gradesData).length >= 1) {
-          setGradeForm(gradesData);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const getOutcomeForm = async () => {
-    try {
-      const outcomeFormRes = await GetStudentOutcomesCompleted(
+      const response = await getGrades(
         year,
         term,
         department,
         number,
         section
-      );
-      const outcomeFormData = outcomeFormRes.data;
-      setOutcomeForm(outcomeFormData);
-    } catch (error) {
-      console.log(error);
+      ); // NOTE: variables are passed in to the component as props
+
+      const { data } = response;
+      if (!data) { // if there is no data or undefined
+        const msg = "No data returned from API call!";
+        const e = new Error(msg, response);
+        toast({
+          title: "Error",
+          description: msg + " See the console for more details.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        throw e;
+      }
+      else {
+        if (Object.keys(data).length < 1) {
+          //If the is the first time working on the form then create a blank form
+          await setGrades(year, term, department, number, section, blankForm); // NOTE: variables are passed in to the component as props, blankForm is the default form imported from the json file
+          setGradeForm(blankForm);
+        }
+        else if (Object.keys(data).length >= 1) {
+          setGradeForm(data);
+        }
+      }
+    }
+    catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getOutcomeForm = async () => {
+    try {
+      const response = await GetStudentOutcomesCompleted(
+        year,
+        term,
+        department,
+        number,
+        section
+      ); // NOTE: variables are passed in to the component as props
+      const { data } = response;
+      setOutcomeForm(data);
+    }
+    catch (error) {
+      console.error(error);
     }
   };
 
   const handleGradeChange = (major, grade, newValue) => {
     try {
-      let tempForm = gradeForm[major];
-      tempForm[grade] = newValue;
+      let tempForm = gradeForm[major]; // gets the major from the gradeForm
+      tempForm[grade] = newValue; // sets the grade to the new value from the function parameter
       setGradeForm({
-        ...gradeForm,
-        [major]: tempForm,
+        ...gradeForm, // spread operator: copies the existing gradeForm
+        [major]: tempForm, // sets the major to the new tempForm
       });
-    } catch (error) {
-      console.log(error);
+    }
+    catch (error) {
+      console.error(error);
     }
   };
 
   const handleOutcomesChange = (major, outcomeName, newValue) => {
-    var tempForm = outcomeForm;
-    for (var i = 0; i < tempForm.length; i++) {
-      if (tempForm[i].outcomeName == outcomeName) {
-        tempForm[i][major] = String(newValue);
-      }
-    }
-    setOutcomeForm(tempForm);
+    let tempForm = outcomeForm; // outcomeForm is a state variable
+    tempForm.forEach((outcome) => { // iterate through the outcomeForm; outcome is the current outcome (iterator)
+      if (outcome.outcomeName == outcomeName) // find the outcome that matches the outcomeName
+        outcome[major] = String(newValue); // set the outcome's major to the new value from the function parameter
+    });
+    setOutcomeForm(tempForm); // set the outcomeForm state variable to the new tempForm
+  };
+
+  /**
+   * @function handleCommentChange sets the comment state variable to the new value from the function parameter
+   * @param {Event} event the event in the HTML DOM that triggered the function
+   * @example
+   * <textarea onChange={handleCommentChange} value={comment}></textarea>
+   */
+  const handleCommentChange = (event) => {
+    setComment(event.target.value);
   };
 
   useEffect(() => {
+    checkUser();
+    getSectionInformation();
     getOutcomeForm();
     getGradeForm();
-  }, []);
-
-  useEffect(() => {
-    getSectionInformation();
-    checkUser();
-  }, []);
+  }, []); // run once when component mounts
 
   const handleSubmit = async () => {
     console.log(gradeForm);
@@ -266,6 +308,8 @@ const formCompletion = ({ number, section, term, year, department }) => {
               fontSize="xl"
               bg="#edf2f7"
               placeholder="// Write a comment"
+              onChange={handleCommentChange}
+              value={comment}
             ></Textarea>
             <Box>
               <Button
