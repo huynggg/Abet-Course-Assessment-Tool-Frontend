@@ -62,14 +62,32 @@ const formCompletion = ({ department, number, section, term, year }) => {
     }
   };
 
-  const submitComment = () => {
+  /**
+   * @function handleSubmit submits the data of the report form on click of the submit button
+   * @param {Event} e the event object
+   * @example
+   * <button onClick={handleSubmit}>Submit Report</button>
+   */
+  const handleSubmit = () => {
     console.log(comment);
+    // TODO: submit the form data to the database
   };
+
+  /**
+   * @function handleCommentChange handles the change of the comment textarea and updates the state of the textarea's value
+   * @param {Event} e the event object
+   * @example
+   * <textarea onChange={handleCommentChange}>
+   * </textarea>
+   */
+  const handleCommentChange = (e) => {
+    setComment(e.target.value);
+  }
 
   useEffect(() => {
     getGradeForm();
     getOutcomeForm();
-  }, []);
+  }, []); // runs once when component mounts
 
     return (
     <div>
@@ -102,9 +120,7 @@ const formCompletion = ({ department, number, section, term, year }) => {
             fontSize="xl"
             bg="#edf2f7"
             placeholder="// Write a comment"
-            onChange={(event) => {
-              setComment(event.target.value);
-            }}
+            onChange={handleCommentChange}
           ></Textarea>
 
           <Box>
@@ -112,7 +128,7 @@ const formCompletion = ({ department, number, section, term, year }) => {
               mb="1em"
               colorScheme="green"
               w="max-content"
-              onClick={submitComment}
+              onClick={handleSubmit}
             >
               Submit Report
             </Button>
