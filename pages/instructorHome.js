@@ -112,7 +112,7 @@ const instructorHome = () => {
   };
 
   const getCoordinatorCourse = async () => {
-    if (!semester)
+    if (!semester) // if there is no semester selected, then return
       return;
     
     const semesterParse = JSON.parse(semester);
@@ -128,7 +128,7 @@ const instructorHome = () => {
 
       const { data } = response;
       if (!data) { // if there is no data or undefined
-        const msg = "No data returned from API call!"
+        const msg = "No data returned from API call!";
         const e = new Error(msg, response);
         toast({
           title: "Error",
@@ -166,8 +166,8 @@ const instructorHome = () => {
   }, [semester]); // run when the component is mounted AND when `semester` changes
 
   useEffect(() => {
-    getSemesterList(); // gets the list of semesters
     getEUID(); // gets the EUID of the user ensures that the user is logged in with a valid JWT
+    getSemesterList(); // gets the list of semesters
   }, []); // run only once when the component is mounted
 
   return (
