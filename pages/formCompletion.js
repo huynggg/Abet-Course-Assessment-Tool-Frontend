@@ -29,12 +29,13 @@ import blankForm from "../components/form-components/blankForm.json";
 import Navigation from "../components/instructor-components/Navigation";
 
 const formCompletion = ({ number, section, term, year, department }) => {
-  const router = useRouter();
+  const router = useRouter(); // for redirecting to other pages
+  const toast = useToast({ position: "top" });
+
   const [gradeForm, setGradeForm] = useState();
   const [outcomeForm, setOutcomeForm] = useState();
+  const [comment, setComment] = useState(""); // must be an empty string, not null or undefined
   const [refreshKey, setRefreshKey] = useState(0); //For refreshing the table
-  const [comment, setComment] = useState("");
-  const toast = useToast({ position: "top" });
   
   const refreshTable = () => {
     setRefreshKey(refreshKey + 1);
