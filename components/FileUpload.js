@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
 import { upload } from '../api';
 
-const FileUpload = ({ext, endpoint = undefined}) => {
+const FileUpload = ({ext=undefined, endpoint=undefined, className=undefined, id="file-upload"}) => {
     const [file, setFile] = useState(null);
 
+    /**
+     * Uses the setFile method from the useState hook to set the file state to the file selected by the user in the `<input>` element.
+     * @function handleFileChange handles the file change event from the `<input>` element in the HTML DOM
+     * @param {Event} event the event object from the `<input>` element (_onChange_ event expected)
+     * @example
+     * <input type="file" onChange={handleFileChange} />
+    **/
     const handleFileChange = (event) => {
-        setFile(event.target.files[0]);
+        setFile(event.target.files[0]); // set the file state to the file selected by the user in the <input> element
     };
 
+    /**
+     * Uses the upload method from the APIHelper to upload the file(s) form the `<input>` element to the server.
+     * @function handleSubmit handles the submit event from the trigger element in the HTML DOM
+     * @param {Event} event the event object from the element (_onClick_ event expected)
+     * @example
+     * <button onClick={handleSubmit}>Submit</button>
+    **/
     const handleSubmit = async (e) => {
         e.preventDefault(); // preventing the default behaviour of the form
 
@@ -42,7 +56,10 @@ const FileUpload = ({ext, endpoint = undefined}) => {
 
     return (
         <>
-            <input type="file" id="file-input" onChange={handleFileChange} accept={ext} />
+            {(ext) ?
+                <input type="file" id={id} className={className ? className : ''} onChange={handleFileChange} accept={ext} /> : // if ext is defined, set the accept attribute of the <input> element
+                <input type="file" id={id} className={className ? className : ''} onChange={handleFileChange} /> // if ext is not defined, do not set the accept attribute of the <input> element
+            }
             <button onClick={handleSubmit}>Upload File</button>
         </>
     );
