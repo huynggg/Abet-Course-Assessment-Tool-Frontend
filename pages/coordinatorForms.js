@@ -22,60 +22,80 @@ const formCompletion = ({ department, number, section, term, year }) => {
 
   const getGradeForm = async () => {
     try {
-      const res = await getGrades(year, term, department, number, section);
-      const gradesData = res.data;
-      if (gradesData) {
-        if (Object.keys(gradesData).length < 1) {
+      const response = await getGrades(year, term, department, number, section);
+      const grades = response.data; // get the grades from the response's data
+      if (grades) { // if grades is not null or undefined
+        if (Object.keys(grades).length < 1) {
           setGradeForm(blankForm);
-        } else if (Object.keys(gradesData).length >= 1) {
-          for (const key in gradesData) {
-            let totalStudentsNum =
-              gradesData[key].a +
-              gradesData[key].b +
-              gradesData[key].c +
-              gradesData[key].d +
-              gradesData[key].f;
-            gradesData[key].totalStudents = totalStudentsNum;
+        }
+        else if (Object.keys(grades).length >= 1) {
+          for (const key in grades) {
+            const totalStudentsNum =
+              grades[key].a +
+              grades[key].b +
+              grades[key].c +
+              grades[key].d +
+              grades[key].f; // calculate the total number of students by adding up the number of students in each grade category
+            grades[key].totalStudents = totalStudentsNum;
           }
-          setGradeForm(gradesData);
+          setGradeForm(grades);
         }
       }
-    } catch (error) {
-      console.log(error);
+    }
+    catch (error) {
+      console.error(error);
     }
   };
 
   const getOutcomeForm = async () => {
     try {
-      const outcomeFormRes = await GetStudentOutcomesCompleted(
+      const response = await GetStudentOutcomesCompleted(
         year,
         term,
         department,
         number,
         section
       );
-      const outcomeFormData = outcomeFormRes.data;
-      console.log(outcomeFormData);
-      setOutcomeForm(outcomeFormData);
-    } catch (error) {
-      console.log(error);
+      const { data } = response;
+      setOutcomeForm(data);
+    }
+    catch (error) {
+      console.error(error);
     }
   };
 
-  const submitComment = () => {
+  /**
+   * @function handleSubmit submits the data of the report form on click of the submit button
+   * @param {Event} e the event object
+   * @example
+   * <button onClick={handleSubmit}>Submit Report</button>
+   */
+  const handleSubmit = () => {
     console.log(comment);
+    // TODO: submit the form data to the database
   };
+
+  /**
+   * @function handleCommentChange handles the change of the comment textarea and updates the state of the textarea's value
+   * @param {Event} e the event object
+   * @example
+   * <textarea onChange={handleCommentChange}>
+   * </textarea>
+   */
+  const handleCommentChange = (e) => {
+    setComment(e.target.value);
+  }
 
   useEffect(() => {
     getGradeForm();
     getOutcomeForm();
-  }, []);
+  }, []); // runs once when component mounts
 
     return (
     <div>
     <Navigation />
     <Center>
-      {gradeForm && outcomeForm ? (
+      {(gradeForm && outcomeForm) ? (
         <Flex mt="2em" direction="column" w="90%">
           <Box w="80%">
             <Text fontSize="2xl" fontWeight="bold">
@@ -93,6 +113,7 @@ const formCompletion = ({ department, number, section, term, year }) => {
             cysGrades={gradeForm.CYS}
           />
           <CoordinatorOutcomes courseOutcomes={outcomeForm} />
+
           <Text fontSize="xl" fontWeight="bold" mb="1em">
             Coordinator Comments
           </Text>
@@ -102,9 +123,7 @@ const formCompletion = ({ department, number, section, term, year }) => {
             fontSize="xl"
             bg="#edf2f7"
             placeholder="// Write a comment"
-            onChange={(event) => {
-              setComment(event.target.value);
-            }}
+            onChange={handleCommentChange}
           ></Textarea>
 
           <Box>
@@ -112,7 +131,7 @@ const formCompletion = ({ department, number, section, term, year }) => {
               mb="1em"
               colorScheme="green"
               w="max-content"
-              onClick={submitComment}
+              onClick={handleSubmit}
             >
               Submit Report
             </Button>
@@ -125,12 +144,13 @@ const formCompletion = ({ department, number, section, term, year }) => {
 };
 
 formCompletion.getInitialProps = ({ query }) => {
+  const { department, number, section, term, year } = query;
   return {
-    department: query.department,
-    number: query.number,
-    section: query.section,
-    term: query.term,
-    year: query.year,
+    department: department,
+    number: number,
+    section: section,
+    term: term,
+    year: year,
   };
 };
 

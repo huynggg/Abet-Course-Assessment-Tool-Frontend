@@ -10,35 +10,44 @@ import {
   Button,
   Box,
 } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import cookieCutter from "cookie-cutter";
 import jwt from "jsonwebtoken";
 import NextLink from "next/link";
 
 const FormsView = ({ instructorCourses, coordinatorCourses, term, year }) => {
+  const router = useRouter();
   const token = cookieCutter.get("token");
-  const json = jwt.decode(token);
-  var roleArray = json.role;
+  var userRoles = jwt.decode(token).role;
   var role = "";
-  if (roleArray.length > 1) {
-    for (var i = 0; i < roleArray.length; i++) {
-      if (roleArray[i] == "Instructor" || roleArray[i] == "Coordinator") {
-        role = roleArray[i];
-      }
+  
+  if (userRoles.length > 1) { // if user has more than one role, set role to the highest role
+    for (var i = 0; i < userRoles.length; i++) {
+      if (userRoles[i] == "Admin")
+        role = userRoles[i];
+      
+      else if (userRoles[i] == "Instructor" || userRoles[i] == "Coordinator")
+        role = userRoles[i];
+      
+      else
+        role = "";
     }
   }
+  else {
+    console.error("User has no roles");
+    router.push("/Login");
+  }
+
   if (instructorCourses) {
     instructorCourses.sort((a, b) =>
-      a.courseNumber + a.sectionNumber > b.courseNumber + b.sectionNumber
-        ? 1
-        : -1
+      (a.courseNumber + a.sectionNumber > b.courseNumber + b.sectionNumber) ? 1 : -1
     );
   }
+
   if (coordinatorCourses) {
     coordinatorCourses.sort((a, b) =>
-      a.courseNumber + a.sectionNumber > b.courseNumber + b.sectionNumber
-        ? 1
-        : -1
+      (a.courseNumber + a.sectionNumber > b.courseNumber + b.sectionNumber) ? 1 : -1
     );
   }
 
@@ -50,7 +59,6 @@ const FormsView = ({ instructorCourses, coordinatorCourses, term, year }) => {
   const renderInstructorCourses =
     instructorCourses &&
     instructorCourses.map((course, idx) => {
-      console.log(instructorCourses);
       return (
         <Tr key={idx}>
           <Td>{course.courseFriendlyName}</Td>
@@ -92,7 +100,8 @@ const FormsView = ({ instructorCourses, coordinatorCourses, term, year }) => {
           </Td>
         </Tr>
       );
-    });
+    })
+  ;
 
   const renderCoordinatorCourses =
     coordinatorCourses &&
@@ -137,9 +146,10 @@ const FormsView = ({ instructorCourses, coordinatorCourses, term, year }) => {
           </Td>
         </Tr>
       );
-    });
+    })
+  ;
 
-  if (roleArray.includes("Instructor") && roleArray.includes("Coordinator")) {
+  if ((userRoles.includes("Instructor") && userRoles.includes("Coordinator")) || userRoles.includes("Admin")) { // if user has both roles or is admin, display both tables
     return (
       <VStack w="75%">
         <Box
@@ -189,7 +199,8 @@ const FormsView = ({ instructorCourses, coordinatorCourses, term, year }) => {
       </VStack>
     );
   }
-  if (roleArray.includes("Instructor")) {
+
+  if (userRoles.includes("Instructor")) { // if user has instructor role, display instructor table
     return (
       <VStack w="75%">
         <Box
@@ -217,7 +228,7 @@ const FormsView = ({ instructorCourses, coordinatorCourses, term, year }) => {
     );
   }
 
-  if (roleArray.includes("Coordinator")) {
+  if (userRoles.includes("Coordinator")) { // if user has coordinator role, display coordinator table
     return (
       <VStack w="75%">
         <Box

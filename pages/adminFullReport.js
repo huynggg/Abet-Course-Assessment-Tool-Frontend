@@ -64,30 +64,35 @@ const adminFullReport = ({
   const getReportData = async () => {
     try {
       setLoading(true);
-      const reportResponse = await GenerateFullReport(year, semester);
-      const reportData = reportResponse.data;
-      console.log(reportData);
-      if (reportData.CS) {
-        setReportCSJson(reportData.CS);
-      }
-      if (reportData.IT) {
-        setReportITJson(reportData.IT);
-      }
-      if (reportData.CE) {
-        setReportCEJson(reportData.CE);
-      }
-      if (reportData.CYS) {
-        setReportCYSJson(reportData.CYS);
-      }
+      const response = await GenerateFullReport(year, semester);
+      const { status } = response;
+      const { data } = response;
+
+      if (status != "Success")
+        throw new Error("Error getting report data");
+
+      if (data["CS"])
+        setReportCSJson(data["CS"]);
+      
+      if (data["IT"])
+        setReportITJson(data["IT"]);
+      
+      if (data["CE"])
+        setReportCEJson(data["CE"]);
+      
+      if (data["CYS"])
+        setReportCYSJson(data["CYS"]);
+
       setLoading(false);
-    } catch (err) {
-      console.log(err);
+    }
+    catch (error) {
+      console.error(error);
     }
   };
 
   useEffect(() => {
-    getReportData();
-  }, []);
+    getReportData(); // load report data
+  }, []); // run once when component mounts
 
   //Add
   const addMajorGradeToTable = (majorName, majorData) => {
@@ -168,7 +173,7 @@ const adminFullReport = ({
     ]);
 
     for (const course in majorData) {
-      let ArrOfOutcomes = majorData[course];
+      const ArrOfOutcomes = majorData[course];
       document.content[index].table.body.push([
         {
           text: course,
@@ -191,25 +196,23 @@ const adminFullReport = ({
   };
 
   const createPdfFile = () => {
-    if (reportCSJson) {
+    if (reportCSJson)
       addMajorGradeToTable("Computer Science", reportCSJson);
-    }
-    if (reportCEJson) {
+
+    if (reportCEJson)
       addMajorGradeToTable("Computer Engineering", reportCEJson);
-    }
-    if (reportITJson) {
+
+    if (reportITJson)
       addMajorGradeToTable("Information Technology", reportITJson);
-    }
-    if (reportCYSJson) {
+
+    if (reportCYSJson)
       addMajorGradeToTable("Cyber Security", reportCYSJson);
-    }
+
     pdfMake.createPdf(document).open();
-    setTimeout(
-      function () {
-        window.location.reload();
-      }.bind(this),
-      1000
-    );
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   return (
@@ -222,7 +225,7 @@ const adminFullReport = ({
       ) : (
         <Grid templateColumns="repeat(1, 1fr)" gap={8} margin="50px 200px 150px 200px">
           <Button onClick={createPdfFile} colorScheme="teal" w="30%" mt="1%">
-            Download pdf
+            Download PDF
           </Button>
           {reportITJson && (
             <AdminReportTable
@@ -256,11 +259,12 @@ const adminFullReport = ({
 };
 
 adminFullReport.getInitialProps = ({ query }) => {
+  const { number, section, semester, year } = query;
   return {
-    number: query.number,
-    section: query.section,
-    semester: query.semester,
-    year: query.year,
+    number: number,
+    section: section,
+    semester: semester,
+    year: year,
     id: "MT2020",
   };
 };

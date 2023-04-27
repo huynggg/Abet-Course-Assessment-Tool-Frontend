@@ -96,6 +96,73 @@ export default class API {
     }
   }
 
+
+
+  /**
+   * @function uploadFile uploads a file to the server
+   * @param {FormData} fileData the file data
+   * @param {string} url the url to upload to
+  **/
+  async uploadFile (fileData, url = "/FileUpload") {
+    const endpoint = `${rootNew}${url}`; // endpoint for file upload; default is /FileUpload, can be specified in url parameter in caller
+    // const ext = fileName.split('.').pop(); // extract file extension from the file name
+    const data = new FormData(); // create the form data object
+    data.append('file', fileData); // append file to form data object
+    const options = { // set options for axios request
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${data._boundary}`, // content type must be multipart/form-data for a file upload, unlike other requests
+        'Authorization': `bearer ${token}`,
+      }
+    };
+
+    axios.post(endpoint, data, options) // send post request to endpoint with form data and options
+      .then((response) => { // handle response
+        const { status } = response; // destructure the status code from the response received
+        if (status === OK) { // if status is 200 OK
+          console.info(`File uploaded successfully.`);
+          return true; // return true if successful
+        }
+        else if (status > 200 || status <= 299) { // if status is SUCCESS other than 200 OK
+          console.info(`File uploaded successfully (${status}).`);
+          return true; // return true if successful
+        }
+        else { // if status is not SUCCESS
+          if (status === 400) { // if status is 400 BAD REQUEST
+            throw new Error(`File upload failed with status ${status}:`, "BAD_REQUEST");
+          }
+          else if (status === 401) { // if status is 401 UNAUTHORIZED
+            throw new Error(`File upload failed with status ${status}:`, "UNAUTHORIZED");
+          }
+          else if (status === 403) { // if status is 403 FORBIDDEN
+            throw new Error(`File upload failed with status ${status}:`, "FORBIDDEN");
+          }
+          else if (status === 404) { // if status is 404 NOT FOUND
+            throw new Error(`File upload failed with status ${status}:`, "NOT_FOUND");
+          }
+          else if (status === 500) { // if status is 500 INTERNAL SERVER ERROR
+            throw new Error(`File upload failed with status ${status}:`, "INTERNAL_SERVER_ERROR");
+          }
+          else if (status === 502) { // if status is 502 BAD GATEWAY
+            throw new Error(`File upload failed with status ${status}:`, "BAD_GATEWAY");
+          }
+          else if (status === 503) { // if status is 503 SERVICE UNAVAILABLE
+            throw new Error(`File upload failed with status ${status}:`, "SERVICE_UNAVAILABLE");
+          }
+          else if (status === 504) { // if status is 504 GATEWAY TIMEOUT
+            throw new Error(`File upload failed with status ${status}:`, "GATEWAY_TIMEOUT");
+          }
+          else { // if status is unknown
+            throw new Error(`File upload failed with status ${status}.`);
+          }
+        }
+      })
+      .catch((error) => { // handle error
+        console.error(error);
+        return false; // return false if error
+      });
+  }
+
+
   //---getFacultyList()--- (Admin)
   //    Input: none
   //    Output: List of admins, instructors, coordinators

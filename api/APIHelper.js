@@ -1,4 +1,3 @@
-import { RepeatOneSharp } from "@mui/icons-material";
 import API from "./api";
 
 // New Endpoint
@@ -7,6 +6,12 @@ export async function Custom() {
   let api_helper = new API();
   let response = await api_helper.Custom();
   return response;
+}
+
+export async function upload(fileData, url = undefined) {
+  const api_helper = new API();
+  const response = await api_helper.upload(fileData, url);
+  return response.status;
 }
 
 // All faculty endpoint
