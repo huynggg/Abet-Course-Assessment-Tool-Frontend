@@ -96,6 +96,41 @@ export default class API {
     }
   }
 
+
+
+  /**
+   * @function uploadFile uploads a file to the server
+   * @param {FormData} fileData the file data
+   * @param {string} url the url to upload to
+  **/
+  async uploadFile (fileData, url = "/FileUpload") {
+    const endpoint = `${rootNew}${url}`; // endpoint for file upload; default is /FileUpload, can be specified in url parameter in caller
+    // const ext = fileName.split('.').pop(); // extract file extension from the file name
+    const data = new FormData(); // create form data object
+    data.append('file', fileData); // append file to form data object
+    const options = { // set options for axios request
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${data._boundary}`, // set content type header with boundary from form data object
+        'Authorization': 'bearer ' + token,
+      }
+    };
+
+    axios.post(endpoint, data, options) // send post request to endpoint with form data and options
+      .then((response) => {
+        const { status } = response;
+        if (status === OK) {
+          console.info('File uploaded successfully.');
+        }
+        else {
+          throw new Error(`File upload failed with status ${status}.`);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+
   //---getFacultyList()--- (Admin)
   //    Input: none
   //    Output: List of admins, instructors, coordinators
