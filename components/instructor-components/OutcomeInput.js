@@ -100,7 +100,7 @@ const OutcomeInput = ({outcome, index, studentsByMajor, currentStudentWorks}) =>
                     <List styleType="disc">
                         {renderStudentWork}
                     </List>
-                    <form onSubmit = {addStudentWork}>
+                    <form onSubmit={addStudentWork}>
                         <Input 
                             placeholder="add student work" 
                             variant="flushed" 
