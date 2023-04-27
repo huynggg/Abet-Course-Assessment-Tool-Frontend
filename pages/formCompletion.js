@@ -342,7 +342,6 @@ const formCompletion = ({ number, section, term, year, department }) => {
 };
 
 formCompletion.getInitialProps = ({ query }) => { // get the query parameters from the URL
-  console.log(query); // log the query parameters to the console
   const { department, number, section, term, year } = query; // destructure the query parameters
   return {
     department: department,

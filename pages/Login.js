@@ -13,8 +13,7 @@ import React, { useRef, useState, createContext, useContext } from "react";
 import { login, Custom } from "../api/APIHelper";
 import { useToast } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-const crypto = require("crypto"); // for hashing the password using pbkdf2 before contacting to the server
-
+import { Alert } from "@material-ui/lab";
 
 const theme = createTheme({
   palette: {
@@ -36,9 +35,7 @@ const Newlogin = () => {
     e.preventDefault();
     try {
       const response = await login(euidRef.current.value, passwordRef.current.value);
-      console.log("response" + response);
       if (response) {
-        console.log("Reponse", response);
         toast({
           title: "Login Successful",
           description: "Please wait...",
@@ -48,31 +45,33 @@ const Newlogin = () => {
         });
         if (router.query && router.query.from) {
           router.push(router.query.from);
-        } else if (response.includes("Admin")) {
+        }
+        else if (response.includes("Admin")) {
           router.push("/adminHome");
-        } else if (response.includes("Coordinator")) {
+        }
+        else if (response.includes("Coordinator")) {
           router.push("/instructorHome");
-        } else if (response.includes("Instructor")) {
+        }
+        else if (response.includes("Instructor")) {
           router.push("/instructorHome");
-        } else if (response == "Student") {
+        }
+        else if (response == "Student") {
           router.push("/studentHome");
         }
       } else
         toast({
           title: "Incorrect UserID or password",
           status: "error",
-          duration: 9000,
-          isClosable: true,
+          duration: 5000,
+          isClosable: false,
         });
     }
     catch (error) {
-      if (error == TypeError) {
-        return new Error("TypeError: Login failed?");
-      }
-      else { // orginal catch exception
-        console.log("Error: " + error);
-        alert("try 'admin' & 'admin'");
-      }
+      console.error(error);
+      console.info("Developer, try:", {
+        "username": "admin",
+        "password": "admin",
+      });
     }
   }
 
